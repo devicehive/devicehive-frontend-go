@@ -20,6 +20,7 @@ func (p *PgConnection) GetDeviceById(id string) (*Device, error) {
 	if err != nil {
 		return device, err
 	}
+	device.DeviceId = id
 	return device, nil
 
 }

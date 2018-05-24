@@ -3,7 +3,7 @@ package validation
 type Action int8
 
 const (
-	ANY                        Action = iota
+	ANY Action = iota
 	NONE
 	GET_NETWORK
 	GET_DEVICE

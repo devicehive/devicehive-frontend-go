@@ -3,7 +3,9 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"github.com/devicehive/devicehive-frontend-go/dh-jwt"
+	"github.com/devicehive/devicehive-frontend-go/dhjwt"
+	"github.com/devicehive/devicehive-frontend-go/dhkafka"
+	"github.com/devicehive/devicehive-frontend-go/notifications"
 	"github.com/devicehive/devicehive-frontend-go/pg"
 	"github.com/devicehive/devicehive-frontend-go/validation"
 	"github.com/dgrijalva/jwt-go"
@@ -12,15 +14,28 @@ import (
 	"net/http"
 )
 
-const JWT_SECRET = "magic"
-const DB_CONN_STR = "postgres://postgres:mysecretpassword@localhost/postgres?sslmode=disable"
-
-
+const (
+	JWT_SECRET  = "magic"
+	DB_CONN_STR = "postgres://postgres:mysecretpassword@localhost/postgres?sslmode=disable"
+)
 
 func main() {
 	e := echo.New()
 	db := pg.New(DB_CONN_STR)
+	kafka := dhkafka.New([]string{"localhost:9092"}, e.Logger)
 	defer db.Close()
+	defer kafka.Close()
+	pConsumer := kafka.GetMessages()
+
+	go func() {
+		for {
+			select {
+			case msg := <-pConsumer.Messages():
+				fmt.Println(msg)
+			}
+		}
+
+	}()
 
 	config := middleware.JWTConfig{
 		Claims:     &dhjwt.JwtCustomClaims{},
@@ -31,7 +46,7 @@ func main() {
 	e.GET("/", func(c echo.Context) error {
 		user := c.Get("user").(*jwt.Token)
 		claims := user.Claims.(*dhjwt.JwtCustomClaims)
-		fmt.Println(claims)
+		//fmt.Println(claims)
 		return c.JSON(http.StatusOK, claims)
 	})
 
@@ -55,9 +70,18 @@ func main() {
 				Message: "Internal Error",
 			})
 		}
-		validation.HasPermission(device, claims, validation.GET_DEVICE_NOTIFICATION)
-		fmt.Println(claims)
-		return c.String(http.StatusOK, deviceId)
+		if !validation.HasPermission(device, claims, validation.GET_DEVICE_NOTIFICATION) {
+			return c.JSON(http.StatusBadRequest, ErrorMessage{
+				Error:   http.StatusBadRequest,
+				Message: "You have not permissions for this action",
+			})
+		}
+		body := new(notifications.DeviceNotificationWrapper)
+		c.Bind(body)
+		notif := notifications.New(device, body)
+		kafka.Send(notif)
+
+		return c.JSON(http.StatusOK, notif)
 	})
 
 	e.Logger.Fatal(e.Start(":1323"))

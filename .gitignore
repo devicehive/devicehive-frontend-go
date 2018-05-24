@@ -114,3 +114,5 @@ Temporary Items
 
 /.idea/
 /vendor/
+/bin/
+/projectFilesBackup/

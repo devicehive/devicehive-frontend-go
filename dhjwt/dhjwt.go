@@ -1,9 +1,9 @@
 package dhjwt
 
 import (
-	"time"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
+	"time"
 )
 
 type JwtCustomClaims struct {
