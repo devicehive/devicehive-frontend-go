@@ -1,6 +1,6 @@
 package validation
 
-type Action int8
+type Action uint8
 
 const (
 	ANY Action = iota

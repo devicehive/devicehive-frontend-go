@@ -14,8 +14,8 @@ func (p *PgConnection) Close() {
 	p.conn.Close()
 }
 
-func (p *PgConnection) GetDeviceById(id string) (*Device, error) {
-	device := &Device{}
+func (p *PgConnection) GetDeviceById(id string) (Device, error) {
+	device := Device{}
 	err := p.conn.QueryRow("SELECT network_id, device_type_id FROM device WHERE device_id=$1", id).Scan(&device.NetworkId, &device.DeviceTypeId)
 	if err != nil {
 		return device, err

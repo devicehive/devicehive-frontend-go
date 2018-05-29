@@ -50,6 +50,25 @@
   revision = "2e65f85255dbc3072edf28d6b5b8efc472979f5a"
 
 [[projects]]
+  name = "github.com/hazelcast/hazelcast-go-client"
+  packages = [
+    ".",
+    "config",
+    "core",
+    "internal",
+    "internal/common",
+    "internal/common/collection",
+    "internal/predicates",
+    "internal/protocol",
+    "internal/serialization",
+    "internal/serialization/classdef",
+    "serialization",
+    "serialization/classdef"
+  ]
+  revision = "b1fe981331c7d13a51fa7aef211392575cd64b65"
+  version = "v0.2"
+
+[[projects]]
   name = "github.com/labstack/echo"
   packages = [
     ".",
@@ -89,6 +108,12 @@
   packages = ["."]
   revision = "0360b2af4f38e8d38c7fce2a9f4e702702d73a39"
   version = "v0.0.3"
+
+[[projects]]
+  name = "github.com/patrickmn/go-cache"
+  packages = ["."]
+  revision = "a3647f8e31d79543b2d0f0ae2fe5c379d72cedc0"
+  version = "v2.1.0"
 
 [[projects]]
   name = "github.com/pierrec/lz4"
@@ -144,6 +169,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "366a9eb79d842c117c33567525867f8d7d382e82aa8a72e7670eb2f48522b321"
+  inputs-digest = "993ec87cf0ebe19223796e4539d2c7117bf5f6b1279cb0e9577c21edb3f2ee07"
   solver-name = "gps-cdcl"
   solver-version = 1

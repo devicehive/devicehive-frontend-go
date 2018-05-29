@@ -3,6 +3,7 @@ package notifications
 import (
 	"github.com/araddon/dateparse"
 	"github.com/devicehive/devicehive-frontend-go/pg"
+	"github.com/devicehive/devicehive-frontend-go/request"
 	"math/rand"
 	"time"
 )
@@ -11,36 +12,48 @@ type MessagesToDevice interface {
 	GetDeviceId() string
 }
 
+type DeviceNotification struct {
+	Id           int64  `json:"id"`
+	DeviceId     string `json:"deviceId"`
+	DeviceTypeId int8   `json:"deviceTypeId"`
+	NetworkId    int8   `json:"networkId"`
+	Timestamp    int64  `json:"timestamp"`
+	Notification string `json:"notification"`
+
+	Parameters DeviceNotificationWrapperParameters `json:"parameters"`
+}
 type Notification struct {
-	ID           int64
-	DeviceId     string
-	DeviceTypeId int8
-	NetworkId    int8
-	Timestamp    int64
-	Notification string
-	Parameters   DeviceNotificationWrapperParameters
+	DeviceNotification DeviceNotification `json:"deviceNotification"`
+	Action             request.Action     `json:"a"`
 }
 
 func (n *Notification) GetDeviceId() string {
-	return n.DeviceId
+	return n.DeviceNotification.DeviceId
 }
 func New(device *pg.Device, wrapper *DeviceNotificationWrapper) *Notification {
-	notif := &Notification{
-		ID:           rand.Int63(),
+
+	n := DeviceNotification{
+		Id:           rand.Int63(),
 		DeviceId:     device.DeviceId,
 		DeviceTypeId: device.DeviceTypeId,
 		NetworkId:    device.NetworkId,
 		Notification: wrapper.Notification,
 		Parameters:   wrapper.Parameters,
 	}
+
+	notif := &Notification{
+		DeviceNotification: n,
+		Action:             request.NOTIFICATION_INSERT_REQUEST,
+	}
+
 	if wrapper.Timestamp != "" {
 		t, err := dateparse.ParseAny(wrapper.Timestamp)
 		if err != nil {
-			notif.Timestamp = time.Now().Unix()
+			notif.DeviceNotification.Timestamp = time.Now().Unix()
 		}
-		notif.Timestamp = int64(t.Unix())
+		notif.DeviceNotification.Timestamp = int64(t.Unix())
 	} else {
-		notif.Timestamp = time.Now().Unix()
+		notif.DeviceNotification.Timestamp = time.Now().Unix()
 	}
 	return notif
 }

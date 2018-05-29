@@ -4,17 +4,11 @@ import (
 	"encoding/json"
 	"github.com/Shopify/sarama"
 	"github.com/devicehive/devicehive-frontend-go/notifications"
+	"github.com/devicehive/devicehive-frontend-go/request"
 	"github.com/labstack/echo"
 	"github.com/satori/go.uuid"
 	"log"
-	"time"
 )
-
-// todo:
-//@SerializedName("t")
-//private int type;
-
-
 
 type KafkaServer struct {
 	requestTopic  string
@@ -22,6 +16,14 @@ type KafkaServer struct {
 	producer      sarama.AsyncProducer
 	consumer      sarama.Consumer
 	logger        echo.Logger
+}
+
+func (k *KafkaServer) GetConsumer() *sarama.Consumer {
+	return &k.consumer
+}
+
+func (k *KafkaServer) GetRequestTopic() string {
+	return k.responseTopic
 }
 
 func (k *KafkaServer) Close() {
@@ -33,18 +35,21 @@ func (k *KafkaServer) Close() {
 	}
 }
 
-func (k *KafkaServer) Send(msg notifications.MessagesToDevice) {
+func (k *KafkaServer) Send(msg notifications.MessagesToDevice) string {
+	cId :=  uuid.NewV4().String()
 	kMsg, _ := json.Marshal(KafkaRequestMessage{
 		Body:                msg,
 		PartionKey:          msg.GetDeviceId(),
 		SingleReplyExpected: true,
-		ReplyTo:             k.requestTopic,
-		CorrelationId:       uuid.NewV4().String(),
+		ReplyTo:             k.responseTopic,
+		CorrelationId:       cId,
+		Type:                request.CLIENT_REQUEST,
 	})
 	k.producer.Input() <- &sarama.ProducerMessage{
 		Value: sarama.ByteEncoder(kMsg),
 		Topic: k.requestTopic,
 	}
+	return cId
 }
 
 func (k *KafkaServer) GetMessages() sarama.PartitionConsumer {
@@ -58,9 +63,6 @@ func (k *KafkaServer) GetMessages() sarama.PartitionConsumer {
 func New(brokerList []string, logger echo.Logger) *KafkaServer {
 
 	config := sarama.NewConfig()
-	config.Producer.RequiredAcks = sarama.WaitForLocal
-	config.Producer.Compression = sarama.CompressionSnappy
-	config.Producer.Flush.Frequency = 500 * time.Millisecond
 
 	producer, err := sarama.NewAsyncProducer(brokerList, config)
 	if err != nil {

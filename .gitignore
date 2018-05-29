@@ -116,3 +116,4 @@ Temporary Items
 /vendor/
 /bin/
 /projectFilesBackup/
+/docker-compose.yml
